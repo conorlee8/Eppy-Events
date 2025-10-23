@@ -926,7 +926,8 @@ export default function Home() {
       const name = e.features[0].properties?.name
       if (!name) return
 
-      console.log('🗺️ POLYGON CLICKED:', name)
+      const currentZoom = map.current?.getZoom() || 0
+      console.log('🔷 POLYGON CLICKED:', name, '| Zoom:', currentZoom.toFixed(1))
 
       // Find all events in this neighborhood
       const eventsInNeighborhood = mockEvents.filter(event => {
@@ -936,7 +937,45 @@ export default function Home() {
 
       if (eventsInNeighborhood.length === 0) return
 
-      // **UPDATE SIDEBAR/DRAWER WITH NEIGHBORHOOD EVENTS**
+      // At zoom 11-14 (hexagon mode): zoom to fit + decluster
+      if (currentZoom >= 11 && currentZoom < 15) {
+        console.log('🎯 DECLUSTERING hexagon for:', name)
+
+        // Update sidebar immediately
+        setFilteredEvents(eventsInNeighborhood)
+        setSelectedCluster(eventsInNeighborhood)
+        setSidebarEvents(eventsInNeighborhood)
+        setSidebarTitle(name)
+        setSidebarVisible(true)
+
+        // Get bounds of all events
+        const lngs = eventsInNeighborhood.map(ev => ev.longitude)
+        const lats = eventsInNeighborhood.map(ev => ev.latitude)
+
+        // Zoom to fit all events nicely
+        map.current?.fitBounds([
+          [Math.min(...lngs), Math.min(...lats)],
+          [Math.max(...lngs), Math.max(...lats)]
+        ], {
+          padding: 100,
+          duration: 1000,
+          maxZoom: 16
+        })
+
+        // Wait for zoom to complete, then decluster
+        const handleMoveEnd = () => {
+          if (clusteringSystem.current) {
+            const declusteredSet = (clusteringSystem.current as any).declusteredNeighborhoods
+            declusteredSet.add(name)
+            clusteringSystem.current.update()
+            map.current?.off('moveend', handleMoveEnd)
+          }
+        }
+        map.current?.once('moveend', handleMoveEnd)
+        return
+      }
+
+      // At other zoom levels: zoom to fit + decluster
       console.log('📋 Showing', eventsInNeighborhood.length, 'events from', name, 'in sidebar')
       setFilteredEvents(eventsInNeighborhood)
       setSelectedCluster(eventsInNeighborhood)
@@ -978,7 +1017,7 @@ export default function Home() {
       map.current?.once('moveend', handleMoveEnd)
     })
 
-    console.log('🏘️  Added neighborhood boundaries to map with click filtering')
+    console.log('🏘️  Added neighborhood boundaries to map')
   }
 
   // Add neighborhoods to map when data is loaded

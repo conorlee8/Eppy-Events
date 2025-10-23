@@ -46,10 +46,10 @@ export class ClusteringSystemV2 {
   update() {
     const zoom = this.map.getZoom()
 
-    // RECLUSTERING LOGIC: Reset declustered neighborhoods when zooming out
-    if (zoom < 14 && this.declusteredNeighborhoods.size > 0) {
-      // Zoomed out below neighborhood detail level - recluster all
-      console.log(`🔄 RECLUSTERING: Zoom ${zoom.toFixed(1)} < 14 - resetting ${this.declusteredNeighborhoods.size} declustered neighborhoods`)
+    // RECLUSTERING LOGIC: Reset declustered neighborhoods when zooming out below hexagon range
+    if (zoom < 11 && this.declusteredNeighborhoods.size > 0) {
+      // Zoomed out below hexagon level - recluster all
+      console.log(`🔄 RECLUSTERING: Zoom ${zoom.toFixed(1)} < 11 - resetting ${this.declusteredNeighborhoods.size} declustered neighborhoods`)
       this.declusteredNeighborhoods.clear()
     }
 
@@ -123,23 +123,12 @@ export class ClusteringSystemV2 {
       // Create hexagon marker
       const el = this.createHexagonMarker(neighborhoodEvents.length, neighborhoodName)
 
-      console.log(`🎯 Setting up click handler for: ${neighborhoodName}`)
-
       const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
         .setLngLat([centerLng, centerLat])
         .addTo(this.map)
 
-      // Add click handler AFTER marker is added to map
-      // Hexagon click → Show events in sidebar
-      el.onclick = (e) => {
-        console.log('🎯 HEXAGON CLICKED!', neighborhoodName, 'Events:', neighborhoodEvents.length)
-        e.stopPropagation()
-
-        // Call callback to update sidebar with these events
-        if (this.onHexagonClick) {
-          this.onHexagonClick(neighborhoodEvents)
-        }
-      }
+      // NOTE: Click handling is done via polygon layer in page.tsx
+      // Hexagon markers can't reliably receive clicks because Mapbox polygon layer intercepts them
 
       this.markers.set(`neighborhood-${neighborhoodName}`, marker)
     })
