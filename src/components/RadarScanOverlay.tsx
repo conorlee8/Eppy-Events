@@ -49,11 +49,13 @@ export function RadarScanOverlay({ progress, userLocation, onComplete }: RadarSc
           }}
         />
 
-        {/* Rotating radar beam - pure CSS animation */}
+        {/* Rotating radar beam - pure CSS animation with hardware acceleration */}
         <div
           className="absolute w-[300vh] h-[300vh]"
           style={{
             animation: `rotate360 ${animationDuration} linear forwards`,
+            willChange: 'transform',
+            transform: 'translateZ(0)', // Force GPU acceleration
           }}
         >
           {/* Radar beam gradient */}
@@ -62,7 +64,9 @@ export function RadarScanOverlay({ progress, userLocation, onComplete }: RadarSc
             style={{
               width: '150vh',
               height: '2px',
-              background: 'linear-gradient(to right, rgba(59, 130, 246, 0.9), transparent)',
+              background: 'linear-gradient(to right, rgba(59, 130, 246, 0.7), transparent)',
+              willChange: 'transform',
+              transform: 'translateZ(0)', // Force GPU acceleration
             }}
           />
         </div>

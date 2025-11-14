@@ -62,22 +62,6 @@ export function HolographicEventCard({ event, onClose, spritePosition }: Hologra
         style={{ transform: 'none' }}
       />
 
-      {/* Holographic Beam from sprite position */}
-      <div
-        className={`fixed z-[65] pointer-events-none transition-all duration-800 ${
-          isVisible ? 'opacity-100' : 'opacity-0'
-        }`}
-        style={{
-          left: spritePosition.x,
-          top: spritePosition.y,
-          width: '2px',
-          height: '100vh',
-          background: 'linear-gradient(to top, rgba(0,255,255,0.8), rgba(0,255,255,0) 40%)',
-          boxShadow: '0 0 20px rgba(0,255,255,0.8), 0 0 40px rgba(0,200,255,0.4)',
-          transform: 'translateX(-1px)',
-        }}
-      />
-
       {/* Holographic Card Container */}
       <div className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none">
         <div
@@ -214,7 +198,10 @@ export function HolographicEventCard({ event, onClose, spritePosition }: Hologra
                 <div className="flex items-center space-x-2">
                   <span className="text-base sm:text-xl">💰</span>
                   <span className="text-emerald-400 font-bold text-base sm:text-lg">
-                    {event.price === 'Free' ? 'FREE' : `$${event.price}`}
+                    {event.price.isFree ? 'FREE' :
+                     event.price.min && event.price.max ? `$${event.price.min} - $${event.price.max}` :
+                     event.price.min ? `$${event.price.min}` :
+                     'See venue for pricing'}
                   </span>
                 </div>
               )}

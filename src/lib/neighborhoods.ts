@@ -269,3 +269,47 @@ export function filterEventsByNeighborhood(
     isPointInPolygon([event.longitude, event.latitude], neighborhood)
   )
 }
+
+/**
+ * Calculate the centroid (center point) of a polygon
+ */
+function calculatePolygonCentroid(coordinates: Position[][]): [number, number] {
+  // Use the outer ring (first ring)
+  const ring = coordinates[0]
+
+  let latSum = 0
+  let lngSum = 0
+  let count = 0
+
+  for (const [lng, lat] of ring) {
+    lngSum += lng
+    latSum += lat
+    count++
+  }
+
+  return [lngSum / count, latSum / count]
+}
+
+/**
+ * Get centroids for all neighborhoods
+ */
+export function getNeighborhoodCentroids(
+  neighborhoods: NeighborhoodCollection
+): Array<{ name: string; lat: number; lng: number }> {
+  return neighborhoods.features.map(feature => {
+    let centroid: [number, number]
+
+    if (feature.geometry.type === 'Polygon') {
+      centroid = calculatePolygonCentroid(feature.geometry.coordinates)
+    } else {
+      // MultiPolygon - use the centroid of the first/largest polygon
+      centroid = calculatePolygonCentroid(feature.geometry.coordinates[0])
+    }
+
+    return {
+      name: feature.properties.name,
+      lng: centroid[0],
+      lat: centroid[1]
+    }
+  })
+}
